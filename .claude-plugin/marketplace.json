@@ -7,6 +7,7 @@
       "name": "prompt-boost",
       "source": "./prompt-boost",
       "description": "Analysiert und optimiert Prompts und Agenten-Aufträge passend zum aktiven Modell, lernt aus Bewertungen."
-    }
+    },
+    { "name": "clean-code", "source": "./clean-code", "description": "Hält Claude zu sauberem Code an: Lint-Hinweise nach Änderungen, strenge Typen, Referenzordner mit Bibliotheks-Quellcode und Schutz für CLAUDE.md und AGENTS.md." }
   ]
 }

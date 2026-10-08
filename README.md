@@ -5,6 +5,7 @@ Eigene Mods für [Claude Code](https://claude.ai/code), gebündelt als Plugin-Ma
 | Mod | Was sie macht |
 |---|---|
 | [prompt-boost](prompt-boost/README.md) | Analysiert und optimiert jeden Prompt passend zum aktiven Modell, verbessert Agenten-Aufträge, macht Subagenten sparsam (Lagebild, schlanke Varianten, Briefing-Gate, Kostenmessung), zeigt dir die verbesserte Fassung samt Schreibtipps und lernt aus deinen Bewertungen. |
+| [clean-code](clean-code/README.md) | Hält Claude zu sauberem Code an, nach einem Video von Moritz Brandes mit fünf Tipps: Lint-Hinweis nach Code-Änderungen, strenge Typen, Referenzordner mit Bibliotheks-Quellcode, Schutz für CLAUDE.md, AGENTS.md und Skills. |
 
 ## Installation
 
@@ -24,6 +25,18 @@ claude plugin marketplace add ptrzptrz888-create/claude-mods
 
 ```bash
 claude plugin install prompt-boost@willis-mods --scope user
+```
+
+Die Mod clean-code installierst du im gleichen Muster. In einer Session im Terminal:
+
+```
+/plugin install clean-code --marketplace ptrzptrz888-create/claude-mods
+```
+
+Im Code-Tab der Desktop-App und in `claude -p` mit dem Marketplace aus dem Block oben:
+
+```bash
+claude plugin install clean-code@willis-mods --scope user
 ```
 
 ## Hinweis
