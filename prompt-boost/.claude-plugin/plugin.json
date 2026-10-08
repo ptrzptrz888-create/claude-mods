@@ -1,0 +1,74 @@
+{
+  "name": "prompt-boost",
+  "version": "0.3.0",
+  "description": "Analysiert und optimiert Prompts und Agenten-Aufträge passend zum aktiven Modell, bevor Claude damit arbeitet.",
+  "author": {
+    "name": "Wilhelm Peters"
+  },
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "optimizerModel": {
+      "type": "string",
+      "title": "Modell für die Optimierung",
+      "description": "Welches Modell Prompts analysiert und umschreibt. haiku ist am schnellsten, sonnet der beste Kompromiss.",
+      "default": "sonnet",
+      "options": [
+        "haiku",
+        "sonnet",
+        "opus"
+      ]
+    },
+    "minChars": {
+      "type": "number",
+      "title": "Mindestlänge",
+      "description": "Kürzere Prompts (etwa „ja“ oder „weiter“) werden nicht optimiert.",
+      "default": 40
+    },
+    "optimizeAgents": {
+      "type": "boolean",
+      "title": "Agenten-Aufträge optimieren",
+      "description": "Schreibt den Prompt jedes Subagenten vor dem Start um und hängt einen Arbeitsvertrag an.",
+      "default": true
+    },
+    "contextAnalysis": {
+      "type": "boolean",
+      "title": "Verlaufsanalyse",
+      "description": "Bezieht sich ein Prompt auf den bisherigen Verlauf, liest ein zweiter Durchlauf das Gespräch mit (aus dem Prompt-Cache, kostet etwas mehr).",
+      "default": true
+    },
+    "askRating": {
+      "type": "boolean",
+      "title": "Nach Antworten bewerten lassen",
+      "description": "Zeigt nach optimierten Antworten ein Band mit Gut oder Daneben, daraus lernt die Mod deinen Prompt-Stil.",
+      "default": true
+    },
+    "agentPolicy": {
+      "type": "string",
+      "title": "Agenten starten",
+      "description": "fragen: Claude fragt vor jedem Agenten um Erlaubnis. frei: Claude entscheidet selbst.",
+      "default": "fragen",
+      "options": [
+        "fragen",
+        "frei"
+      ]
+    },
+    "routerPath": {
+      "type": "string",
+      "title": "Pfad zum Skill-Router",
+      "description": "Markdown-Datei mit einer Kernliste von Skills. Leer lassen schaltet Skill-Vorschläge ab.",
+      "default": "~/.claude/skill-router/ROUTER.md"
+    },
+    "showBrief": {
+      "type": "boolean",
+      "title": "Verbesserte Fassung im Verlauf zeigen",
+      "description": "Schreibt nach jeder Analyse dein Original, die verbesserte Fassung und Schreibtipps in den Verlauf (nur für dich sichtbar, nicht fürs Modell).",
+      "default": true
+    },
+    "showProgress": {
+      "type": "boolean",
+      "title": "Statusleiste",
+      "description": "Zeigt über der Eingabe, in welcher Phase die Prompt-Verarbeitung steht.",
+      "default": true
+    }
+  }
+}

@@ -1,0 +1,8 @@
+# Local Claude Code settings (personal paths and permissions)
+.claude/
+
+# Type declarations the Claude Code engine lays at every load
+**/.claude-plugin/types/
+
+.DS_Store
+node_modules/

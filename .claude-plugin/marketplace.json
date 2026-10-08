@@ -1,0 +1,12 @@
+{
+  "name": "willis-mods",
+  "description": "Willis eigene Claude-Code-Mods.",
+  "owner": { "name": "Wilhelm Peters" },
+  "plugins": [
+    {
+      "name": "prompt-boost",
+      "source": "./prompt-boost",
+      "description": "Analysiert und optimiert Prompts und Agenten-Aufträge passend zum aktiven Modell, lernt aus Bewertungen."
+    }
+  ]
+}
