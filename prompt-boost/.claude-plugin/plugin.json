@@ -5,6 +5,7 @@
   "author": {
     "name": "Wilhelm Peters"
   },
+  "license": "MIT",
   "types": "./types/index.d.ts",
   "userConfig": {
     "optimizerModel": {

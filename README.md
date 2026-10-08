@@ -29,3 +29,7 @@ claude plugin install prompt-boost@willis-mods --scope user
 ## Hinweis
 
 Die Mods sind auf Deutsch geschrieben und richten sich an deutschsprachige Nutzer. Sie nutzen die Plugin-Schnittstelle für Funktions-Hooks von Claude Code, die sich als Early Access zwischen Versionen ändern kann.
+
+## Lizenz
+
+[MIT](LICENSE). Frei nutzbar, veränderbar und weitergebbar, solange der Lizenzhinweis erhalten bleibt. Ohne Gewähr.
