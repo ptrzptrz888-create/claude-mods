@@ -61,6 +61,10 @@ const world = (
   })
   mock.env(on, { HOME: '/home/w' })
   on('session.model', () => ({ value: 'claude-opus-5-5' }))
+  on('session.cwd', () => ({ value: '/repo' }))
+  on('process.run', () => ({
+    value: { exitCode: 0, stdout: '## main', stderr: '', isStdoutTruncated: false, isStderrTruncated: false },
+  }))
   on('clock.now', () => ({ value: Date.UTC(2026, 9, 8, 9, 30) }))
   on('fs.read', ($, e) => ({ value: e.path === '/home/w/.claude/skill-router/ROUTER.md' ? ROUTER : '' }))
   on('ui.status', ($, e) => {
@@ -284,7 +288,7 @@ describe('idea 3: rating band and learning', () => {
 describe('step 4 and idea 5: agents', () => {
   const spawnInput = {
     tool_use_id: 't1',
-    prompt: 'Finde alle Stellen, an denen die Steuer berechnet wird.',
+    prompt: 'Ziel: Finde alle Stellen, an denen die Steuer berechnet wird.\nFertig wenn: Liste vollständig.\nRückgabe: Datei:Zeile.',
     description: 'Steuerstellen finden',
     subagentType: 'Explore',
     provider: { plugin: 'engine', tier: 'core' },

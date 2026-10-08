@@ -40,6 +40,47 @@ export type AgentRewrite = {
   after: number
   /** Report sections the agent left out; null while it runs. */
   missing: string[] | null
+  /** The type the main loop asked for when the mod routed it to a variant. */
+  routedFrom: string | null
+}
+
+export type NoteKind = 'befund' | 'ausgeschlossen' | 'entscheidung'
+
+/** One finding, dead end or decision the main loop recorded for agents. */
+export type LagebildNote = {
+  kind: NoteKind
+  text: string
+  /** ISO 8601, e.g. 2026-10-08T09:30:00.000Z */
+  at: string
+}
+
+/** What the main loop knows, for every agent it starts. */
+export type LagebildState = {
+  notes: LagebildNote[]
+  read: string[]
+  changed: string[]
+}
+
+/** Whether a refused fork waits for the person's answer, or was approved. */
+export type ForkGate = {
+  isAsked: boolean
+  isApproved: boolean
+}
+
+/** Rounds and tokens of one subagent, for the status band and its summary. */
+export type AgentStat = {
+  agentId: string
+  label: string
+  type: string
+  model: string
+  routedFrom: string | null
+  rounds: number
+  /** Context of the first request: the agent's fixed base plus its brief. */
+  startContext: number
+  lastContext: number
+  /** Context summed over every request, cached reads included. */
+  totalInput: number
+  isDone: boolean
 }
 
 /** The rating band above the prompt after a boosted turn. */
@@ -76,6 +117,9 @@ declare module 'claude-code' {
       agents: AgentRewrite[]
       rating: RatingAsk | null
       progress: Progress | null
+      lagebild: LagebildState
+      agentStats: AgentStat[]
+      forkGate: ForkGate
     }
   }
 }

@@ -4,7 +4,7 @@ Eigene Mods für [Claude Code](https://claude.ai/code), gebündelt als Plugin-Ma
 
 | Mod | Was sie macht |
 |---|---|
-| [prompt-boost](prompt-boost/README.md) | Analysiert und optimiert jeden Prompt passend zum aktiven Modell, verbessert Agenten-Aufträge, zeigt dir die verbesserte Fassung samt Schreibtipps und lernt aus deinen Bewertungen. |
+| [prompt-boost](prompt-boost/README.md) | Analysiert und optimiert jeden Prompt passend zum aktiven Modell, verbessert Agenten-Aufträge, macht Subagenten sparsam (Lagebild, schlanke Varianten, Briefing-Gate, Kostenmessung), zeigt dir die verbesserte Fassung samt Schreibtipps und lernt aus deinen Bewertungen. |
 
 ## Installation
 

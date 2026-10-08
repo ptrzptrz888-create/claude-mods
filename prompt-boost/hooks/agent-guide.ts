@@ -26,12 +26,18 @@ Bevor du einen Subagenten startest oder vorschlägst, prüfe drei Dinge:
 2. Welches Modell reicht? haiku für Suchen und Lesen, sonnet für Umsetzung, opus nur für schwierige Abwägungen. Setze \`model\` bewusst.
 3. Sind die Teilaufgaben unabhängig? Dann parallel in einer Nachricht starten, sonst nacheinander.
 
-Schreibe den Prompt wie ein Briefing für eine fähige Kollegin, die nichts von diesem Gespräch weiß:
-- Ziel und Zweck: was herauskommen soll und wofür es gebraucht wird
+Schreibe den Prompt wie ein Briefing für eine fähige Kollegin, die nichts von diesem Gespräch weiß, mit genau diesen Feldnamen am Zeilenanfang:
+- Ziel: was herauskommen soll und wofür es gebraucht wird
 - Kontext: konkrete Pfade, Namen, bisherige Befunde, was schon ausgeschlossen ist
-- Umfang und Grenzen: was ausdrücklich nicht zu tun ist
+- Grenzen: was ausdrücklich nicht zu tun ist
 - Fertig wenn: ein prüfbares Endkriterium
 - Rückgabe: Format und Länge des Berichts
+Ziel, Fertig wenn und Rückgabe sind Pflicht, ein Briefing ohne sie wird einmal zurückgewiesen.
+
+Sparsam delegieren:
+- Nimm für einfache Aufträge die schlanken Typen prompt-boost:suche, prompt-boost:umsetzung oder prompt-boost:pruefung. Sie laden weder CLAUDE.md noch Regeln und kosten pro Runde ein Vielfaches weniger. general-purpose wird passend umgeleitet, wenn der Auftrag keine Browser-, MCP- oder Agentenwerkzeuge braucht.
+- Jeder Agent bekommt automatisch ein Lagebild mit Ziel, gelesenen und geänderten Dateien. Halte Befunde, ausgeschlossene Spuren und Entscheidungen mit dem Werkzeug Lagebild fest, sobald sie feststehen, damit kein Agent sie neu erarbeitet.
+- Einen Fork (erbt den ganzen Verlauf) startest du nur nach ausdrücklicher Zustimmung der Person.
 
 Behandle den Bericht eines Agenten als Hinweis, nicht als Beleg. Prüfe die entscheidenden Aussagen selbst, bevor du darauf handelst.`
 

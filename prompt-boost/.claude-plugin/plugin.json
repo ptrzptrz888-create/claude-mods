@@ -1,7 +1,7 @@
 {
   "name": "prompt-boost",
-  "version": "0.3.0",
-  "description": "Analysiert und optimiert Prompts und Agenten-Aufträge passend zum aktiven Modell, bevor Claude damit arbeitet.",
+  "version": "0.4.0",
+  "description": "Analysiert und optimiert Prompts und Agenten-Aufträge passend zum aktiven Modell und macht Subagenten sparsam: Lagebild, schlanke Varianten, Briefing-Gate, Fork-Sperre und Kostenanzeige.",
   "author": {
     "name": "Wilhelm Peters"
   },
@@ -69,6 +69,42 @@
       "type": "boolean",
       "title": "Statusleiste",
       "description": "Zeigt über der Eingabe, in welcher Phase die Prompt-Verarbeitung steht.",
+      "default": true
+    },
+    "leanAgents": {
+      "type": "boolean",
+      "title": "Schlanke Agentenvarianten",
+      "description": "Registriert suche, umsetzung und pruefung ohne CLAUDE.md und leitet general-purpose passend um.",
+      "default": true
+    },
+    "briefGate": {
+      "type": "boolean",
+      "title": "Briefing-Gate",
+      "description": "Weist ein Agenten-Briefing ohne Ziel, Fertig wenn oder Rückgabe einmal zurück.",
+      "default": true
+    },
+    "lagebild": {
+      "type": "boolean",
+      "title": "Lagebild",
+      "description": "Gibt jedem neuen Agenten mit, was die Hauptsession schon weiß (Ziel, Dateien, Befunde).",
+      "default": true
+    },
+    "forkGate": {
+      "type": "boolean",
+      "title": "Fork-Sperre",
+      "description": "Ein Fork erbt den ganzen Verlauf und startet erst nach deiner Zustimmung im Chat.",
+      "default": true
+    },
+    "roundWarning": {
+      "type": "boolean",
+      "title": "Rundenwarnung",
+      "description": "Erinnert einen Agenten bei Runde 25 und 40 daran, mit dem Bericht abzuschließen.",
+      "default": true
+    },
+    "agentDisplay": {
+      "type": "boolean",
+      "title": "Agentenkosten anzeigen",
+      "description": "Zeigt laufende Agenten mit Runde und Kontext und nach dem Ende eine Kostenzeile.",
       "default": true
     }
   }

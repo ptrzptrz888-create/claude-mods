@@ -1,15 +1,16 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, ModelForkResult, PluginOptions, PromptOrigin, Register } from 'claude-code'
 
-import type { AgentRewrite, Analysis, Feedback, Mode, Progress, RatingAsk } from '../types'
-import { agentGuide, asAgentPolicy, CONTRACT_MARK, withContract } from './agent-guide'
+import type { Analysis, Feedback, Mode, Progress, RatingAsk } from '../types'
+import { agentGuide, asAgentPolicy } from './agent-guide'
 import { briefLog, headlineOf, MARK, skippedLog, stepsOf } from './display'
 import type { AgentPolicy } from './agent-guide'
 import { addFeedback, asFeedbackList, DISTILL_EVERY, distillRequest } from './feedback'
+import { registerAgentWatch } from './agent-watch'
+import { agentLine, LAGEBILD_TOOL_SPEC, LEAN_COMMANDS, leanSettingsOf, settleFork, summaryLine, variantSpec, VARIANTS } from './lean-agents'
+import type { LeanSettings } from './lean-agents'
 import { familyOf, profileOf } from './model-profiles'
 import {
-  acceptAgentRewrite,
-  agentRequest,
   analyseRequest,
   forkPrompt,
   MAX_INPUT_CHARS,
@@ -19,16 +20,19 @@ import {
 import type { Extras, Verdict } from './optimizer'
 import { missingSections, reportNote } from './reports'
 import { coreTable, DEFAULT_ROUTER_PATH, expandHome } from './router'
+import { CLOSED_FORK_GATE } from './state'
 
 const PANE = 'prompt-boost'
 const COMMAND = 'prompt-boost'
 const RAW_PREFIX = /^roh:\s*/i
-const AGENT_LOG_SIZE = 20
+const BAND_AGENT_LINES = 3
 
 const last = atom({ plugin: 'prompt-boost', key: 'last' } as const, null)
 const agents = atom({ plugin: 'prompt-boost', key: 'agents' } as const, [])
 const rating = atom({ plugin: 'prompt-boost', key: 'rating' } as const, null)
 const progress = atom({ plugin: 'prompt-boost', key: 'progress' } as const, null)
+const agentStats = atom({ plugin: 'prompt-boost', key: 'agentStats' } as const, [])
+const forkGate = atom({ plugin: 'prompt-boost', key: 'forkGate' } as const, CLOSED_FORK_GATE)
 
 type Settings = {
   optimizerModel: string
@@ -164,6 +168,11 @@ const summaryOf = (analysis: Analysis | null) => {
 const withContext = <E extends { context?: readonly string[] }>(e: E, extra: readonly string[]): E =>
   extra.length === 0 ? e : { ...e, context: [...(e.context ?? []), ...extra] }
 
+const leanLine = (lean: LeanSettings) =>
+  `Sparsame Agenten: Varianten ${lean.isRoutingOn ? 'an' : 'aus'} · Gate ${lean.isBriefGateOn ? 'an' : 'aus'}` +
+  ` · Lagebild ${lean.isLagebildOn ? 'an' : 'aus'} · Fork-Sperre ${lean.isForkGateOn ? 'an' : 'aus'}` +
+  ` · Rundenwarnung ${lean.isRoundWarningOn ? 'an' : 'aus'}`
+
 async function readMode($: EngineInterface): Promise<Mode> {
   const stored = await $.store.get('mode')
 
@@ -277,6 +286,27 @@ async function saveRating(
   $.ui.toast('prompt-boost: Persönlicher Prompt-Stil aktualisiert (/prompt-boost stil).')
 }
 
+/** Registers the lean variants, the Lagebild tool and the agent commands. */
+async function setupLean($: EngineInterface, lean: LeanSettings) {
+  if (lean.isRoutingOn) {
+    for (const name of VARIANTS) await $.agent.register(variantSpec(name))
+  }
+  if (lean.isLagebildOn) await $.tool.register(LAGEBILD_TOOL_SPEC)
+  for (const command of LEAN_COMMANDS) await $.command.register(command)
+  // To the second: agents from earlier the same day must not count as "since".
+  if (typeof (await $.store.get('leanSinceAt')) !== 'string') {
+    await $.store.set('leanSinceAt', new Date(await $.clock.now()).toISOString())
+  }
+}
+
+/** Marks a subagent done and writes its cost line for the person. */
+async function finishAgentStat($: EngineInterface, agentId: string, lean: LeanSettings) {
+  const stat = (await read($, agentStats)).find(item => item.agentId === agentId)
+  if (stat === undefined || stat.isDone) return
+  await update($, agentStats, list => list.map(item => (item.agentId === agentId ? { ...item, isDone: true } : item)))
+  if (lean.isAgentDisplayOn) $.ui.log(summaryLine(stat))
+}
+
 /** Idea 5: checks a finished subagent's report against the work contract. */
 async function checkReport($: EngineInterface, agentId: string, answer: string) {
   const entry = (await read($, agents)).find(item => item.agentId === agentId)
@@ -292,6 +322,8 @@ async function checkReport($: EngineInterface, agentId: string, answer: string) 
 
 export const register: Register = (on, options) => {
   const settings = settingsOf(options)
+  const lean = leanSettingsOf(options)
+  registerAgentWatch(on, options)
 
   on('session.start', async ($, e, next) => {
     await $.command.register({
@@ -299,6 +331,7 @@ export const register: Register = (on, options) => {
       description: 'Prompt-Optimierung: status, an, ersetzen, aus, zeigen, probe <text>, stil',
       argumentHint: '[status|an|ersetzen|aus|zeigen|probe <text>|stil [zurücksetzen]]',
     })
+    await setupLean($, lean)
 
     return next(e)
   })
@@ -308,6 +341,7 @@ export const register: Register = (on, options) => {
     const base = withContext(e, takeNotes())
     if (!isFromPerson(e.origin)) return next(base)
 
+    await update($, forkGate, gate => settleFork(gate, e.text))
     awaitingRating = null
     await update($, rating, () => null)
     if (RAW_PREFIX.test(e.text)) return next({ ...base, text: e.text.replace(RAW_PREFIX, '') })
@@ -337,6 +371,7 @@ export const register: Register = (on, options) => {
   on('turn.complete', async ($, e, next) => {
     if (e.agentId !== undefined) {
       await checkReport($, e.agentId, e.answer)
+      await finishAgentStat($, e.agentId, lean)
 
       return next(e)
     }
@@ -349,34 +384,7 @@ export const register: Register = (on, options) => {
     return next(e)
   })
 
-  // Step 4a: rewrite each subagent's task before it starts.
-  on('agent.spawn', async ($, e, next) => {
-    const isRewritable = e.workflow === undefined && !e.fork && !e.prompt.includes(CONTRACT_MARK)
-    if (!settings.isAgentBoostOn || !isRewritable || (await readMode($)) === 'aus') return next(e)
-
-    const targetModel = e.model ?? e.parentModel
-    const result =
-      e.prompt.length <= MAX_INPUT_CHARS
-        ? await $.model.complete(agentRequest({ prompt: e.prompt, targetModel, optimizerModel: settings.optimizerModel }))
-        : null
-    const rewritten = result?.isAnswered ? acceptAgentRewrite(e.prompt, result.text) : null
-    const prompt = withContract(rewritten ?? e.prompt)
-    const spawned = await next({ ...e, prompt })
-
-    const entry: AgentRewrite = {
-      agentId: spawned.agentId ?? '',
-      description: e.description,
-      subagentType: e.subagentType,
-      model: targetModel,
-      isOptimized: rewritten !== null,
-      before: e.prompt.length,
-      after: prompt.length,
-      missing: null,
-    }
-    await update($, agents, list => [...list, entry].slice(-AGENT_LOG_SIZE))
-
-    return spawned
-  }).catch(($, e, next) => next(e))
+  // Step 4a (gate, routing, rewrite, Lagebild) lives in agent-watch.ts.
 
   // Idea 5: a foreground agent's result carries the note straight back.
   on('tool.call', { tool: 'Agent' }, async ($, e, next) => {
@@ -404,11 +412,24 @@ export const register: Register = (on, options) => {
 
     if (ask === null || e.props.isWorking) {
       const current = settings.isProgressShown ? await read($, progress) : null
-      if (current === null) return next(e)
+      const running = lean.isAgentDisplayOn
+        ? (await read($, agentStats)).filter(stat => !stat.isDone).slice(-BAND_AGENT_LINES)
+        : []
+      if (current === null && running.length === 0) return next(e)
+      if (current === null) {
+        return (
+          <Box flexDirection="column">
+            {running.map(stat => (
+              <Text dimColor>prompt-boost Agent: {agentLine(stat)}</Text>
+            ))}
+          </Box>
+        )
+      }
       const isRunning = current.phase === 'analyse' || current.phase === 'verlauf'
 
       return (
-        <Box>
+        <Box flexDirection="column">
+          <Box>
           <Text bold>prompt-boost </Text>
           {stepsOf(current).map(step => (
             <Text bold={step.state === 'running'} dimColor={step.state === 'waiting' || step.state === 'skipped'}>
@@ -419,6 +440,10 @@ export const register: Register = (on, options) => {
           {!isRunning && current.phase !== 'fehler' && (
             <Button key="details" label="Details" onPress={() => $.ui.open({ id: PANE, title: 'prompt-boost' })} />
           )}
+          </Box>
+          {running.map(stat => (
+            <Text dimColor>prompt-boost Agent: {agentLine(stat)}</Text>
+          ))}
         </Box>
       )
     }
@@ -521,6 +546,7 @@ export const register: Register = (on, options) => {
       `Aktives Modell: ${model} (Profil ${profileOf(familyOf(model)).label})`,
       `Optimierer: ${settings.optimizerModel} · Verlaufsanalyse ${settings.isContextOn ? 'an' : 'aus'} · Mindestlänge ${settings.minChars} Zeichen`,
       `Agenten: Umschreiben ${settings.isAgentBoostOn ? 'an' : 'aus'} · Regel ${settings.agentPolicy === 'fragen' ? 'vorher fragen' : 'frei'}`,
+      leanLine(lean),
       `Bewertungen: ${ratings} gespeichert · Band ${settings.isRatingOn ? 'an' : 'aus'}`,
       summaryOf(await read($, last)),
       'Tipp: „roh:“ vor einem Prompt sendet ihn unverändert.',
