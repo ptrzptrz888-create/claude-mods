@@ -64,6 +64,12 @@ let routerCache: string | null = null
 let pendingNotes: readonly string[] = []
 /** The boosted prompt whose turn runs now, to ask for a rating after it. */
 let awaitingRating: RatingAsk | null = null
+/**
+ * Whether this loaded copy registered variants, tool and commands. A reload
+ * (/reload-plugins) starts a fresh copy without session.start, so the next
+ * prompt registers them again; a name registered twice is replaced.
+ */
+let isLeanSetUp = false
 
 const takeNotes = () => {
   const taken = pendingNotes
@@ -297,6 +303,7 @@ async function setupLean($: EngineInterface, lean: LeanSettings) {
   if (typeof (await $.store.get('leanSinceAt')) !== 'string') {
     await $.store.set('leanSinceAt', new Date(await $.clock.now()).toISOString())
   }
+  isLeanSetUp = true
 }
 
 /** Marks a subagent done and writes its cost line for the person. */
@@ -338,6 +345,15 @@ export const register: Register = (on, options) => {
 
   // Steps 1 to 3: analyse, optimize for the selected model, hand it on.
   on('prompt.submit', async ($, e, next) => {
+    if (!isLeanSetUp) {
+      isLeanSetUp = true
+      try {
+        await setupLean($, lean)
+      } catch {
+        // Variants and tool stay missing until the next session; the prompt goes on.
+        $.ui.toast('prompt-boost: Agentenvarianten konnten nicht registriert werden.')
+      }
+    }
     const base = withContext(e, takeNotes())
     if (!isFromPerson(e.origin)) return next(base)
 

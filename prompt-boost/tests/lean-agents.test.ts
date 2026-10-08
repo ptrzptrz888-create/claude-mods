@@ -160,6 +160,31 @@ describe('rounds and costs', () => {
   })
 })
 
+describe('registration', () => {
+  test('registers the variants and the Lagebild tool with the first prompt after a reload', async ($, on) => {
+    world(on)
+    const agentsSeen: string[] = []
+    const toolsSeen: string[] = []
+    on('agent.register', ($, e) => {
+      agentsSeen.push(e.name)
+
+      return { value: { agent: `prompt-boost:${e.name}` } }
+    })
+    on('tool.register', ($, e) => {
+      toolsSeen.push(e.name)
+
+      return { value: { tool: `mcp__prompt-boost__${e.name}` } }
+    })
+    on('command.register', ($, e) => ({ value: { command: e.name } }))
+    on('prompt.submit', ($, e) => ({ text: e.text }))
+
+    await $.prompt.submit({ text: 'ok', wait: false, origin: { kind: 'composer' } })
+
+    expect(agentsSeen).toEqual(['suche', 'umsetzung', 'pruefung'])
+    expect(toolsSeen).toEqual(['Lagebild'])
+  })
+})
+
 describe('pure helpers', () => {
   test('missingBriefFields reads labels with markdown around them', () => {
     expect(missingBriefFields('**Ziel:** x\n## Fertig wenn\ny\n- Rückgabe: z')).toEqual([])
