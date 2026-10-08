@@ -96,7 +96,7 @@ export const briefLog = (analysis: Analysis): string =>
       analysis.lessons.map(lesson => `• ${lesson}`),
     ),
     ...section(
-      'Rückfragen, die Claude dir gleich stellt:',
+      'Mögliche Rückfragen (Claude fragt nur, was es nicht selbst klären kann):',
       analysis.questions.map(question => `• ${question}`),
     ),
   ].join('\n')

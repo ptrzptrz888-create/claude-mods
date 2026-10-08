@@ -204,9 +204,41 @@ describe('idea 1: context analysis', () => {
   })
 })
 
+describe('questions only after a look at the conversation', () => {
+  test('lets the fork drop quick questions the conversation already answers', async ($, on) => {
+    const quick = answered(verdict({ questions: ['Welcher Ordner genau?'] }))
+    const seen = world(on, quick, {}, answered(verdict({ questions: [] })))
+
+    const result = await $.prompt.submit({ ...submit, text: PROMPT })
+
+    expect(seen.forks.length).toBe(1)
+    expect(seen.forks[0]).toContain('Welcher Ordner genau?')
+    expect((result.context ?? []).join('\n')).not.toContain('AskUserQuestion')
+  })
+
+  test('tells the quick analysis to hand which-and-where questions to the conversation', async ($, on) => {
+    const seen = world(on, answered(verdict()))
+
+    await $.prompt.submit({ ...submit, text: PROMPT })
+
+    expect(seen.completes[0]?.system).toContain('welche Datei, welcher Ort oder welche Plattform')
+  })
+
+  test('calls the passed-on questions possible, since Claude decides whether to ask', async ($, on) => {
+    const asked = answered(verdict({ questions: ['Welcher Ordner genau?'] }))
+    const seen = world(on, asked, {}, asked)
+
+    await $.prompt.submit({ ...submit, text: PROMPT })
+
+    expect(seen.statuses.at(-1)).toContain('1 mögliche Rückfrage')
+    expect(seen.statuses.at(-1)).not.toContain('Rückfragen')
+  })
+})
+
 describe('ideas 2, 4 and 6: questions, model tip, skill', () => {
   test('asks the main model to clarify open questions first', async ($, on) => {
-    world(on, answered(verdict({ questions: ['Welcher Ordner genau?'] })))
+    const asked = answered(verdict({ questions: ['Welcher Ordner genau?'] }))
+    world(on, asked, {}, asked)
 
     const result = await $.prompt.submit({ ...submit, text: PROMPT })
 

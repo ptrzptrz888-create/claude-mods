@@ -57,6 +57,7 @@ const ANALYSE_SYSTEM = (style: string, extras: Extras) => `Du bist Prompt-Ingeni
 Du bekommst einen Prompt, den eine Person gerade geschrieben hat. Du siehst den bisherigen Gesprächsverlauf NICHT.
 
 Setze needsContext auf true (und skip auf true), wenn der Prompt sich auf den Gesprächsverlauf bezieht („wie oben", „mach weiter", „das", „Punkt 2") und ohne ihn nicht sinnvoll zu verstehen ist.
+Fragen danach, welches Ding, welche Datei, welcher Ort oder welche Plattform gemeint ist, gehören nicht in questions: Der Verlauf beantwortet sie meist. Setze in diesem Fall needsContext auf true.
 
 ${rules(style, extras)}`
 
@@ -127,18 +128,24 @@ export const analyseRequest = (args: {
   timeoutMs: TIMEOUT_MS,
 })
 
+/** The quick analysis's questions, for the fork to check against the conversation. */
+const candidatesNote = (candidates: readonly string[]) =>
+  candidates.length === 0
+    ? ''
+    : `\nEine Analyse ohne Verlauf hätte diese Fragen gestellt. Übernimm in questions nur die, die der Verlauf nicht beantwortet:\n${candidates.map(question => `- ${question}`).join('\n')}\n`
+
 /**
  * The context request: one message appended to the session's own transcript,
  * so the analyser reads the whole conversation from the prompt cache.
  */
-export const forkPrompt = (args: { text: string; model: string; extras: Extras }) =>
+export const forkPrompt = (args: { text: string; model: string; extras: Extras; candidates: readonly string[] }) =>
   `[prompt-boost, interne Analyse. Führe nichts aus und rufe keine Werkzeuge auf.]
 Die Person hat gerade diesen neuen Prompt geschrieben. Analysiere ihn vor dem Hintergrund des bisherigen Gesprächs und löse Verweise wie „wie oben" oder „Punkt 2" mit dem Verlauf auf.
 
 <prompt>
 ${args.text}
 </prompt>
-
+${candidatesNote(args.candidates)}
 ${rules(profileOf(familyOf(args.model)).style, args.extras)}`
 
 /** Step 4: the request that rewrites a subagent's task as a self-contained brief. */

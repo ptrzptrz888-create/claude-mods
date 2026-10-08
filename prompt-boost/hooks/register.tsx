@@ -156,11 +156,14 @@ const contextFor = (analysis: Analysis, mode: Mode): string[] => [
 const asReplacement = (analysis: Analysis, original: string) =>
   `${analysis.brief}${bullets('Offene Punkte:', analysis.gaps)}\n\n---\nOriginalwortlaut:\n${original}`
 
+/** prompt-boost only proposes questions; the main model decides whether to ask them. */
+const possibleQuestions = (count: number) => `${count} mögliche Rückfrage${count === 1 ? '' : 'n'}`
+
 /** The status line text; the engine itself puts the plugin name in front. */
 const statusOf = (analysis: Analysis, mode: Mode) => {
   if (analysis.isSkipped) return `unverändert · ${analysis.reason.slice(0, 60)}`
   const verb = mode === 'ersetzen' ? 'ersetzt' : 'ergänzt'
-  const asks = analysis.questions.length === 0 ? '' : ` · ${analysis.questions.length} Rückfragen`
+  const asks = analysis.questions.length === 0 ? '' : ` · ${possibleQuestions(analysis.questions.length)}`
 
   return `${verb} für ${profileOf(analysis.family).label}${analysis.usedContext ? ' (mit Verlauf)' : ''}${asks}`
 }
@@ -169,7 +172,7 @@ const summaryOf = (analysis: Analysis | null) => {
   if (analysis === null) return 'Noch kein Prompt analysiert.'
   if (analysis.isSkipped) return `Letzter Prompt übersprungen: ${analysis.reason}`
 
-  return `Letzter Prompt: ${analysis.intent} (${analysis.gaps.length} offene Punkte, ${analysis.questions.length} Rückfragen)`
+  return `Letzter Prompt: ${analysis.intent} (${analysis.gaps.length} offene Punkte, ${possibleQuestions(analysis.questions.length)})`
 }
 
 const withContext = <E extends { context?: readonly string[] }>(e: E, extra: readonly string[]): E =>
@@ -209,9 +212,10 @@ async function readExtras($: EngineInterface, settings: Settings): Promise<Extra
 }
 
 /**
- * Steps 1 and 2. A quick analysis without the conversation first; only when
- * it finds the prompt leans on earlier turns (idea 1) does a fork read the
- * whole conversation, served from the main thread's prompt cache.
+ * Steps 1 and 2. A quick analysis without the conversation first; when it
+ * finds the prompt leans on earlier turns (idea 1) or has questions, a fork
+ * reads the whole conversation, served from the main thread's prompt cache,
+ * and keeps only the questions the conversation leaves open.
  */
 async function analyse($: EngineInterface, text: string, mode: Mode, settings: Settings): Promise<Analysis> {
   const startedAt = await $.clock.now()
@@ -221,7 +225,9 @@ async function analyse($: EngineInterface, text: string, mode: Mode, settings: S
   const quick = toVerdict(
     await $.model.complete(analyseRequest({ text, model, optimizerModel: settings.optimizerModel, extras })),
   )
-  const isContextNeeded = settings.isContextOn && 'needsContext' in quick && quick.needsContext
+  // Questions from the blind analysis are only candidates: the fork checks them against the conversation.
+  const candidates = 'failed' in quick ? [] : quick.questions
+  const isContextNeeded = settings.isContextOn && 'needsContext' in quick && (quick.needsContext || candidates.length > 0)
   if (!isContextNeeded) {
     const durationMs = (await $.clock.now()) - startedAt
 
@@ -230,7 +236,7 @@ async function analyse($: EngineInterface, text: string, mode: Mode, settings: S
 
   $.ui.status('liest den Gesprächsverlauf …')
   await setProgress($, { phase: 'verlauf', isReadingContext: true, startedAt, durationMs: 0, detail: '' })
-  const deep = toVerdict(await $.model.fork({ prompt: forkPrompt({ text, model, extras }) }))
+  const deep = toVerdict(await $.model.fork({ prompt: forkPrompt({ text, model, extras, candidates }) }))
   const isDeepUsable = !('failed' in deep)
   const durationMs = (await $.clock.now()) - startedAt
 

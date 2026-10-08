@@ -4,7 +4,7 @@ Eine Mod für Claude Code, die jeden Prompt analysiert, passend zum gerade gewä
 
 Ziel ist effizienteres und genaueres Arbeiten mit Claude. Gleichzeitig zeigt dir die Mod nach jedem Prompt, wie du ihn selbst besser hättest schreiben können.
 
-**Version** 0.4.1 · **Autor** Wilhelm Peters · **Lizenz** [MIT](../LICENSE)
+**Version** 0.4.2 · **Autor** Wilhelm Peters · **Lizenz** [MIT](../LICENSE)
 
 ---
 
@@ -20,7 +20,7 @@ Ziel ist effizienteres und genaueres Arbeiten mit Claude. Gleichzeitig zeigt dir
 Dazu kommen diese Funktionen:
 
 - **Verlaufsanalyse.** Bezieht sich dein Prompt auf Früheres („Punkt 2 von oben"), liest ein zweiter Durchlauf den Gesprächsverlauf mit.
-- **Rückfragen.** Was sich nicht sinnvoll annehmen lässt, klärt Claude vor der Arbeit gebündelt mit dir, als Auswahl mit Empfehlung.
+- **Rückfragen.** Was sich nicht sinnvoll annehmen lässt, klärt Claude vor der Arbeit gebündelt mit dir, als Auswahl mit Empfehlung. Mögliche Rückfragen prüft vorher ein Blick in den Gesprächsverlauf, was dort schon steht, fällt weg.
 - **Statusleiste.** Über der Eingabe siehst du, in welcher Phase die Verarbeitung steht.
 - **Verbesserter Prompt im Verlauf.** Du siehst dein Original, die verbesserte Fassung und 1 bis 3 konkrete Schreibtipps.
 - **Lernschleife.** Nach optimierten Antworten bewertest du mit **Gut** oder **Daneben**. Alle 5 Bewertungen leitet die Mod daraus deinen persönlichen Prompt-Stil ab.
@@ -231,7 +231,7 @@ Prompts und Analysen laufen über den API-Zugang deiner Claude-Session, also üb
 
 ## Grenzen
 
-- **Ohne Verlauf.** Der erste Analysedurchlauf sieht den Gesprächsverlauf nicht. Er erkennt Verweise auf den Verlauf und gibt dann an den zweiten Durchlauf ab. Rückfragen, die sich aus dem Verlauf beantworten lassen, soll Claude überspringen.
+- **Ohne Verlauf.** Der erste Analysedurchlauf sieht den Gesprächsverlauf nicht. Er erkennt Verweise auf den Verlauf und gibt dann an den zweiten Durchlauf ab. Hat er Rückfragen, läuft der zweite Durchlauf ebenfalls und streicht, was der Verlauf schon beantwortet. Ist `contextAnalysis` aus, bleiben die Fragen ungeprüft.
 - **Nur für Getipptes.** Die Mod greift nur bei Prompts, die du selbst tippst, in der Session oder über Remote Control. Prompts aus Skripten (`claude -p`, SDK), Benachrichtigungen und anderen Sessions bleiben unberührt.
 - **Kein Notizfeld auf dem Handy.** Die mobile App hat kein Eingabefeld, dort speichert „Daneben" ohne Notiz.
 - **Kürzere Anzeige im Terminal.** Das Terminal zeigt vom Verlaufseintrag die ersten 2000 Zeichen, die Desktop-App bis zu 10.000.
