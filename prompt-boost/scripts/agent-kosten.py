@@ -2,7 +2,8 @@
 
 Reads ~/.claude/projects/*/*/subagents/*.jsonl (one transcript per subagent)
 and the agentType from the *.meta.json beside each. A transcript counts for
-the day its file was last written.
+the moment its first row was written, the agent's start: a file written
+again later (a resumed or touched transcript) keeps its place.
 
     python3 -I agent-kosten.py --since 2026-10-08T12:00:00.000Z [--days 28]
 """
@@ -28,14 +29,17 @@ def context_of(usage):
 
 
 def read_agent(path):
-    """First request's context, rounds and summed input of one transcript."""
-    first, total, cached, rounds = None, 0, 0, 0
+    """Start time, first request's context, rounds and summed input of one transcript."""
+    first, total, cached, rounds, started = None, 0, 0, 0, None
     with open(path, encoding="utf-8", errors="replace") as handle:
         for line in handle:
             try:
                 row = json.loads(line)
             except ValueError:
                 continue
+            stamp = row.get("timestamp")
+            if isinstance(stamp, str) and (started is None or stamp < started):
+                started = stamp
             message = row.get("message")
             if row.get("type") != "assistant" or not isinstance(message, dict):
                 continue
@@ -47,7 +51,7 @@ def read_agent(path):
             total += context
             cached += usage.get("cache_read_input_tokens", 0)
             rounds += 1
-    if first is None:
+    if first is None or started is None:
         return None
     agent_type = "?"
     meta = path[: -len(".jsonl")] + ".meta.json"
@@ -57,7 +61,8 @@ def read_agent(path):
                 agent_type = json.load(handle).get("agentType", "?")
         except (OSError, ValueError):
             pass
-    return {"start": first, "rounds": rounds, "total": total, "cached": cached, "type": agent_type}
+    started_at = dt.datetime.fromisoformat(started.replace("Z", "+00:00")).timestamp()
+    return {"start": first, "rounds": rounds, "total": total, "cached": cached, "type": agent_type, "started_at": started_at}
 
 
 def tokens(value):
@@ -114,15 +119,17 @@ def main():
     pattern = os.path.expanduser("~/.claude/projects/*/*/subagents/*.jsonl")
     before, after = [], []
     for path in glob.glob(pattern):
-        written = os.path.getmtime(path)
-        if written < oldest:
+        # A file is never written before its agent started: the write time
+        # only rules out what is too old, the start time decides the side.
+        if os.path.getmtime(path) < oldest:
             continue
         agent = read_agent(path)
-        if agent is not None:
-            (after if written >= since else before).append(agent)
+        if agent is None or agent["started_at"] < oldest:
+            continue
+        (after if agent["started_at"] >= since else before).append(agent)
 
     lines = [
-        f"Subagenten-Kosten (Median je Agent), Grenze {args.since[:16].replace('T', ' ')} UTC",
+        f"Subagenten-Kosten (Median je Agent, nach Startzeitpunkt), Grenze {args.since[:16].replace('T', ' ')} UTC",
         "",
         *HEADER,
         row(f"{args.days} Tage vorher", before),

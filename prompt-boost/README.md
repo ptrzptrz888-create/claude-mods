@@ -4,7 +4,7 @@ Eine Mod für Claude Code, die jeden Prompt analysiert, passend zum gerade gewä
 
 Ziel ist effizienteres und genaueres Arbeiten mit Claude. Gleichzeitig zeigt dir die Mod nach jedem Prompt, wie du ihn selbst besser hättest schreiben können.
 
-**Version** 0.4.0 · **Autor** Wilhelm Peters · **Lizenz** [MIT](../LICENSE)
+**Version** 0.4.1 · **Autor** Wilhelm Peters · **Lizenz** [MIT](../LICENSE)
 
 ---
 
