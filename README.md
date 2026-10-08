@@ -14,7 +14,7 @@ In einer Claude-Code-Session im Terminal:
 /plugin install prompt-boost --marketplace ptrzptrz888-create/claude-mods
 ```
 
-Die Frage „Add marketplace?" mit `y` bestätigen und als Scope „user" wählen. Danach läuft die Mod in jeder neuen Session, auch in der Desktop-App.
+Die Frage „Add marketplace?" mit `y` bestätigen und als Scope „user" wählen. Danach zeigt Claude die Einstellungen der Mod, Enter übernimmt jeweils den Standard bis „Save configuration". Anschließend läuft die Mod in jeder neuen Session, auch in der Desktop-App.
 
 Im Code-Tab der Desktop-App und in `claude -p` gibt es den Befehl `/plugin` nicht. Dort, oder ganz ohne laufende Session, installierst du mit diesen zwei Befehlen im Terminal:
 
