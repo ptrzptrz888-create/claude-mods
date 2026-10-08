@@ -156,12 +156,13 @@ const contextFor = (analysis: Analysis, mode: Mode): string[] => [
 const asReplacement = (analysis: Analysis, original: string) =>
   `${analysis.brief}${bullets('Offene Punkte:', analysis.gaps)}\n\n---\nOriginalwortlaut:\n${original}`
 
+/** The status line text; the engine itself puts the plugin name in front. */
 const statusOf = (analysis: Analysis, mode: Mode) => {
-  if (analysis.isSkipped) return `prompt-boost: unverändert · ${analysis.reason.slice(0, 60)}`
+  if (analysis.isSkipped) return `unverändert · ${analysis.reason.slice(0, 60)}`
   const verb = mode === 'ersetzen' ? 'ersetzt' : 'ergänzt'
   const asks = analysis.questions.length === 0 ? '' : ` · ${analysis.questions.length} Rückfragen`
 
-  return `prompt-boost: ${verb} für ${profileOf(analysis.family).label}${analysis.usedContext ? ' (mit Verlauf)' : ''}${asks}`
+  return `${verb} für ${profileOf(analysis.family).label}${analysis.usedContext ? ' (mit Verlauf)' : ''}${asks}`
 }
 
 const summaryOf = (analysis: Analysis | null) => {
@@ -227,7 +228,7 @@ async function analyse($: EngineInterface, text: string, mode: Mode, settings: S
     return toAnalysis(quick, { original: text, model, mode, usedContext: false, durationMs })
   }
 
-  $.ui.status('prompt-boost: liest den Gesprächsverlauf …')
+  $.ui.status('liest den Gesprächsverlauf …')
   await setProgress($, { phase: 'verlauf', isReadingContext: true, startedAt, durationMs: 0, detail: '' })
   const deep = toVerdict(await $.model.fork({ prompt: forkPrompt({ text, model, extras }) }))
   const isDeepUsable = !('failed' in deep)
@@ -367,7 +368,7 @@ export const register: Register = (on, options) => {
     const isOutOfRange = text.length < settings.minChars || text.length > MAX_INPUT_CHARS
     if (mode === 'aus' || isOutOfRange || text.startsWith('/')) return next(base)
 
-    $.ui.status('prompt-boost: analysiert …')
+    $.ui.status('analysiert …')
     const analysis = await analyse($, e.text, mode, settings)
     await update($, last, () => analysis)
     await finish($, analysis, settings)
@@ -505,13 +506,13 @@ export const register: Register = (on, options) => {
     if (mode !== undefined) {
       await $.store.set('mode', mode)
 
-      return { text: `prompt-boost: Modus ${MODE_LABEL[mode]}` }
+      return { text: `Modus ${MODE_LABEL[mode]}` }
     }
 
     if (verb === 'zeigen') {
       await $.ui.open({ id: PANE, title: 'prompt-boost' })
 
-      return { text: 'prompt-boost: Analyse-Panel geöffnet.' }
+      return { text: 'Analyse-Panel geöffnet.' }
     }
 
     if (verb === 'stil') {
@@ -520,7 +521,7 @@ export const register: Register = (on, options) => {
         await $.store.delete('feedback')
         await $.store.set('ratingsSinceDistill', 0)
 
-        return { text: 'prompt-boost: Prompt-Stil und Bewertungen zurückgesetzt.' }
+        return { text: 'Prompt-Stil und Bewertungen zurückgesetzt.' }
       }
       const style = await $.store.get('style')
       const count = asFeedbackList(await $.store.get('feedback')).length

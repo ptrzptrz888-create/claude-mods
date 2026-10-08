@@ -163,6 +163,15 @@ describe('prompt.submit', () => {
     expect(seen.statuses.at(-1)).toContain('fehlgeschlagen')
   })
 
+  test('leaves the plugin name to the engine in every status line', async ($, on) => {
+    const seen = world(on, answered(verdict()))
+
+    await $.prompt.submit({ ...submit, text: PROMPT })
+
+    expect(seen.statuses.length).toBeGreaterThan(0)
+    expect(seen.statuses.filter(text => text?.startsWith('prompt-boost')).length).toBe(0)
+  })
+
   test('leaves prompts from other sessions alone', async ($, on) => {
     const seen = world(on, answered(verdict()))
 
