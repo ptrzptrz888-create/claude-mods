@@ -177,7 +177,9 @@ export const modelTip = (current: ModelFamily, complexity: Complexity): string =
     return `Tipp: Die Aufgabe ist anspruchsvoll, ${fit.label} liefert hier verlässlicher (/model ${fit.alias}).`
   }
 
-  return complexity === 'einfach'
+  if (complexity !== 'einfach') return ''
+
+  return current === 'frontier'
     ? 'Tipp: Für diese einfache Aufgabe reicht Haiku oder Sonnet, das spart Kosten (/model sonnet).'
-    : ''
+    : 'Tipp: Für diese einfache Aufgabe reicht Haiku, das spart Kosten (/model haiku).'
 }

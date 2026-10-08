@@ -418,6 +418,13 @@ describe('pure helpers', () => {
     expect(parseVerdict('kein json')).toBeNull()
   })
 
+  test('modelTip only suggests models smaller than the current one', () => {
+    expect(modelTip('frontier', 'einfach')).toContain('Haiku oder Sonnet')
+    const onSonnet = modelTip('balanced', 'einfach')
+    expect(onSonnet).toContain('/model haiku')
+    expect(onSonnet).not.toContain('Sonnet')
+  })
+
   test('modelTip stays quiet for normal work on a big model', () => {
     expect(modelTip('frontier', 'mittel')).toBe('')
     expect(modelTip('fast', 'schwer')).toContain('Opus')

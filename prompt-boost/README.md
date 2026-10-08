@@ -161,7 +161,7 @@ Die Mod liest das aktive Modell und schreibt das Briefing passend dazu.
 
 Subagenten bekommen das Profil *ihres* Modells, nicht das der Hauptsession.
 
-**Modell-Tipp:** Bei einfachen Aufgaben auf Opus schlägt die Mod Haiku oder Sonnet vor. Bei schweren Aufgaben auf Haiku oder Sonnet schlägt sie das größere Modell vor. Bei normaler Arbeit bleibt sie still.
+**Modell-Tipp:** Bei einfachen Aufgaben schlägt die Mod auf Opus Haiku oder Sonnet vor, auf Sonnet nur Haiku. Bei schweren Aufgaben auf Haiku oder Sonnet schlägt sie das größere Modell vor. Bei normaler Arbeit bleibt sie still.
 
 ---
 
