@@ -175,6 +175,16 @@ export const rulesSection = (refs: readonly string[], refsDir: string): string =
 export const instructionGuardText = (path: string): string =>
   `Clean-Code-Regel R8 greift. ${path} wird von Hand gepflegt, nicht von Claude. Änderung nur nach ausdrücklicher Freigabe durch die Person.`
 
+/** Modi, in denen keine Person ein `ask` beantwortet: auto gibt es an den Klassifizierer, bypassPermissions fragt gar nicht. */
+const UNATTENDED_MODES: ReadonlySet<string> = new Set(['auto', 'bypassPermissions'])
+
+/** Ob im Rechtemodus `mode` niemand eine Rückfrage sieht. Ein unbekannter Modus zählt nicht dazu. */
+export const isUnattendedMode = (mode: string | undefined): boolean => mode !== undefined && UNATTENDED_MODES.has(mode)
+
+/** Die Begründung der Sperre, wenn im Modus niemand rückfragen kann (R8). */
+export const unattendedGuardText = (path: string): string =>
+  `${instructionGuardText(path)} In diesem Rechtemodus beantwortet niemand die Rückfrage, deshalb gesperrt. Die Person kann den Modus kurz auf Standard stellen oder die Datei selbst ändern.`
+
 /** Die Pfade, die ein Werkzeugaufruf schreibt. Bash wird über die Befehlsanalyse geprüft, Schreibwerkzeuge über `file_path`. Nimmt jeden Wert, weil die Tool-Union des Engines zu weit für einen engen Parameter ist. */
 export const writtenPathsOf = (call: unknown): string[] => {
   if (!isRecord(call) || typeof call.tool !== 'string') return []

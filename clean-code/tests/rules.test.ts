@@ -9,11 +9,13 @@ import {
   instructionGuardText,
   isCodeFile,
   isInstructionFile,
+  isUnattendedMode,
   lintHintText,
   refsListText,
   repoNameOf,
   rulesSection,
   strictHintText,
+  unattendedGuardText,
   writtenPathsOf,
 } from '../hooks/rules'
 
@@ -204,6 +206,29 @@ describe('instructionGuardText', () => {
 
     expect(text).toContain('/repo/CLAUDE.md')
     expect(text).toContain('R8')
+  })
+})
+
+describe('isUnattendedMode', () => {
+  test('auto und bypassPermissions zählen als unbeaufsichtigt', () => {
+    expect(isUnattendedMode('auto')).toBe(true)
+    expect(isUnattendedMode('bypassPermissions')).toBe(true)
+  })
+
+  test('default, acceptEdits, plan, dontAsk und ein fehlender Modus nicht', () => {
+    for (const mode of ['default', 'acceptEdits', 'plan', 'dontAsk', undefined]) {
+      expect(isUnattendedMode(mode)).toBe(false)
+    }
+  })
+})
+
+describe('unattendedGuardText', () => {
+  test('nennt Pfad, R8 und den Ausweg über den Moduswechsel', () => {
+    const text = unattendedGuardText('/repo/CLAUDE.md')
+
+    expect(text).toContain('/repo/CLAUDE.md')
+    expect(text).toContain('R8')
+    expect(text).toContain('Modus')
   })
 })
 

@@ -7,11 +7,13 @@ import {
   instructionGuardText,
   isCodeFile,
   isInstructionFile,
+  isUnattendedMode,
   lintHintText,
   refsListText,
   repoNameOf,
   rulesSection,
   strictHintText,
+  unattendedGuardText,
   writtenPathsOf,
 } from './rules'
 import type { DirectoryEntry } from './rules'
@@ -51,6 +53,12 @@ const settingsOf = (options: Record<string, unknown>): Settings => {
 let isHintGivenThisTurn = false
 /** Lint-Befehl und tsconfig der Session, einmal ermittelt. Beide Felder können `undefined` sein. */
 let lintCache: ProjectProbe | undefined
+/** Der zuletzt gemeldete Rechtemodus. classic.PreToolUse trägt ihn nicht, die übrigen klassischen Hooks schon. */
+let permissionMode: string | undefined
+
+/** Rückfrage mit `askText`, oder Sperre mit `denyText`, wenn im Modus niemand rückfragt. */
+const guardAnswer = (askText: string, denyText: string): { ask: string } | { deny: string } =>
+  isUnattendedMode(permissionMode) ? { deny: denyText } : { ask: askText }
 
 const referencesPath = async ($: EngineInterface, referencesDir: string): Promise<string> => {
   const home = await $.env.get('HOME')
@@ -194,11 +202,28 @@ export const register: Register = (on, options) => {
     return { ...ran, context: [...(ran.context ?? []), await lintContextOf($)] }
   }).catch(($, e, next) => (next.called ? next(e) : { deny: 'clean-code: Prüfung fehlgeschlagen.' }))
 
+  // Ein ask geht an den Entscheider des Modus, im Modus auto an den Klassifizierer. Deshalb den Modus mitlesen.
+  on('classic.UserPromptSubmit', ($, e, next) => {
+    permissionMode = e.permission_mode ?? permissionMode
+
+    return next(e)
+  }).catch(($, e, next) => next(e))
+
+  on('classic.PostToolUse', ($, e, next) => {
+    permissionMode = e.permission_mode ?? permissionMode
+
+    return next(e)
+  }).catch(($, e, next) => next(e))
+
   // classic.PreToolUse trägt denselben ToolCallEnvelope wie tool.call, also auch tool und command bei Bash.
   on('classic.PreToolUse', async ($, e, next) => {
     const guarded = writtenPathsOf(e).find(isInstructionFile)
     if (settings.guardMode !== 'fragen' || guarded === undefined) return next(e)
 
-    return { ask: instructionGuardText(guarded) }
-  }).catch(($, e, next) => (next.called ? next(e) : { ask: 'clean-code: Prüfung fehlgeschlagen. Bitte die Änderung selbst bestätigen.' }))
+    return guardAnswer(instructionGuardText(guarded), unattendedGuardText(guarded))
+  }).catch(($, e, next) =>
+    next.called
+      ? next(e)
+      : guardAnswer('clean-code: Prüfung fehlgeschlagen. Bitte die Änderung selbst bestätigen.', 'clean-code: Prüfung fehlgeschlagen.'),
+  )
 }

@@ -40,6 +40,8 @@ const world = (on: On, files: readonly string[], tsconfig?: string): Seen => {
     return { deny: 'nicht gefunden' }
   })
   on('ui.log', () => ({ value: undefined }))
+  on('classic.UserPromptSubmit', () => ({}))
+  on('classic.PostToolUse', () => ({}))
   on('tool.call', () => {
     seen.toolRuns += 1
 
@@ -127,5 +129,36 @@ describe('instruction guard', () => {
     const ran = await editFile($, '/repo/.claude/rules/stil.md')
 
     expect(ran.deny ?? '').toContain('R8')
+  })
+
+  test('mit fragen wird Edit auf CLAUDE.md im Modus auto verweigert, weil niemand die Rückfrage beantwortet', async ($, on) => {
+    const seen = world(on, ['package.json'])
+    await $.classic.UserPromptSubmit({ prompt: 'los', permission_mode: 'auto' })
+
+    const ran = await editFile($, '/repo/CLAUDE.md')
+
+    expect(ran.isError).toBe(true)
+    expect(ran.text ?? '').toContain('R8')
+    expect(seen.toolRuns).toBe(0)
+  })
+
+  test('mit fragen wird Bash sed -i auf CLAUDE.md im Modus bypassPermissions verweigert', async ($, on) => {
+    const seen = world(on, ['package.json'])
+    await $.classic.UserPromptSubmit({ prompt: 'los', permission_mode: 'bypassPermissions' })
+
+    const ran = await runBash($, "sed -i '' s/a/b/ CLAUDE.md")
+
+    expect(ran.isError).toBe(true)
+    expect(seen.toolRuns).toBe(0)
+  })
+
+  test('ein späterer Wechsel auf default hebt die Sperre wieder auf', async ($, on) => {
+    world(on, ['package.json'])
+    await $.classic.UserPromptSubmit({ prompt: 'los', permission_mode: 'auto' })
+    await $.classic.UserPromptSubmit({ prompt: 'weiter', permission_mode: 'default' })
+
+    const ran = await editFile($, '/repo/CLAUDE.md')
+
+    expect(ran.text ?? '').not.toContain('niemand')
   })
 })

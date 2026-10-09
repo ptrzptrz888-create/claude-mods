@@ -1,6 +1,6 @@
 {
   "name": "clean-code",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Setzt Clean-Code-Regeln als Hooks um: Lint-Hinweis nach Code-Änderungen, Referenzordner mit Quellcode der Bibliotheken und Schutz für CLAUDE.md, AGENTS.md und Skills.",
   "author": {
     "name": "Wilhelm Peters"

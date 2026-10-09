@@ -28,7 +28,7 @@ Nur R1, R4 und R8 haben zusätzlich einen Hook. Die übrigen Regeln wirken über
 | R5 Idiomatischer Code im Stil des Frameworks | Regel im Systemprompt |
 | R6 Agentenfreundliche, explizite Technik wählen und das Ökosystem prüfen | Regel im Systemprompt |
 | R7 Die eleganteste, kompakteste und lesbarste Lösung wählen | Regel im Systemprompt |
-| R8 CLAUDE.md, AGENTS.md und Skills nicht automatisch von Claude pflegen lassen | Nachfrage vor jeder Änderung, auch bei Bash-Befehlen, die die Datei schreiben. Einstellbar als Sperre oder ganz aus. |
+| R8 CLAUDE.md, AGENTS.md und Skills nicht automatisch von Claude pflegen lassen | Nachfrage vor jeder Änderung, auch bei Bash-Befehlen, die die Datei schreiben. Im Rechtemodus `auto` oder `bypassPermissions` sieht niemand die Nachfrage, dort sperrt die Mod stattdessen. Einstellbar als Sperre oder ganz aus. |
 | R9 Kontext sauber halten, kurze Anweisungen | Der Regelabschnitt im Systemprompt bleibt unter 1.200 Zeichen. |
 
 ---
@@ -94,6 +94,7 @@ Die Mod übernimmt nicht alles. Vier Punkte musst du selbst erledigen.
 - Der Hinweis nach einer Code-Änderung ist nur eine Erinnerung. Der Linter läuft nicht automatisch, Claude muss ihn ausführen.
 - Der Schutz der Anweisungsdateien und der Lint-Hinweis greifen bei Edit, Write und MultiEdit und bei Bash-Befehlen, die erkennbar Dateien schreiben, etwa Umleitungen (`>`, `>>`), `sed -i`, `tee`, `mv` oder `rm`. Das ist eine Textanalyse des Befehls, keine Ausführung.
 - Nicht erkannt werden Schreibzugriffe, die erst zur Laufzeit entstehen, etwa `python -c`, `node -e`, Skripte, die selbst Dateien schreiben, und Befehlssubstitution wie `$(…)`. Wer die Sperre umgehen will, kann das also weiterhin.
+- Eine Nachfrage (`ask`) geht an den Entscheider des Rechtemodus, im Modus `auto` an den Klassifizierer statt an die Person. Der hat in einem Test am 09.10.2026 eine Änderung an CLAUDE.md still durchgelassen. Deshalb sperrt die Mod in `auto` und `bypassPermissions`. Den Modus liest sie aus den klassischen Hooks `UserPromptSubmit` und `PostToolUse`, weil `PreToolUse` ihn nicht mitliefert. Wechselt der Modus mitten im Turn, gilt der neue erst ab dem nächsten Werkzeugaufruf.
 
 ---
 
