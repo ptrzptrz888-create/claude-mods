@@ -6,8 +6,8 @@ export type AgentPolicy = 'fragen' | 'frei'
 
 const POLICY_TEXT: Record<AgentPolicy, string> = {
   fragen:
-    'Starte Subagenten, Workflows oder parallele Agenten nur, wenn die Person es in diesem Gespräch ausdrücklich verlangt hat. ' +
-    'Hältst du einen Agenten für nötig, frag vorher kurz nach (Zweck, grobe Kostenschätzung, warum du es nicht selbst erledigst) und warte auf ein Ja. Fragen ist jederzeit erlaubt.',
+    'Ob du Subagenten, Workflows oder parallele Agenten starten darfst, regelt die Agenten-Regel in der CLAUDE.md der Person, einschließlich dessen, was dort dauerhaft angewiesen ist. ' +
+    'Fehlt eine solche Regel, starte Agenten nur auf ausdrückliche Anweisung. Fragen ist jederzeit erlaubt, mit Zweck und grober Kostenschätzung.',
   frei: 'Du darfst Subagenten selbst starten, wenn die Prüfung unten dafür spricht.',
 }
 

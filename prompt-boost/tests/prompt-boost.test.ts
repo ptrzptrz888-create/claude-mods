@@ -368,7 +368,7 @@ describe('step 4 and idea 5: agents', () => {
     expect((next.context ?? []).join('\n')).toContain('als ungeprüft')
   })
 
-  test('tells the main loop to ask before starting agents', async ($, on) => {
+  test('defers the agent policy to the CLAUDE.md agent rule', async ($, on) => {
     world(on, answered(verdict()))
     on('prompt.compose', () => ({ sections: [] }))
 
@@ -381,7 +381,10 @@ describe('step 4 and idea 5: agents', () => {
       traits: [],
     })
 
-    expect(composed.sections.at(-1)?.text).toContain('frag vorher kurz nach')
+    const text = composed.sections.at(-1)?.text
+    expect(text).toContain('Agenten-Regel in der CLAUDE.md')
+    expect(text).toContain('nur auf ausdrückliche Anweisung')
+    expect(text).not.toContain('in diesem Gespräch ausdrücklich verlangt')
   })
 })
 
